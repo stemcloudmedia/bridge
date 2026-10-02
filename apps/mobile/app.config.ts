@@ -1,5 +1,6 @@
 import type { ExpoConfig } from "expo/config";
 
+import { PRODUCT_BRAND } from "../../packages/shared/src/productBrand.ts";
 import { BRAND_ASSET_PATHS } from "../../scripts/lib/brand-assets.ts";
 import { loadRepoEnv } from "../../scripts/lib/public-config.ts";
 
@@ -73,27 +74,27 @@ const RELEASE_ASSETS = {
 
 const VARIANT_CONFIG = {
   development: {
-    appName: "T3 Code Dev",
-    scheme: "t3code-dev",
-    iosBundleIdentifier: "com.t3tools.t3code.dev",
-    androidPackage: "com.t3tools.t3code.dev",
-    relyingParty: "clerk.t3.codes",
+    appName: `${PRODUCT_BRAND.name} Dev`,
+    scheme: `${PRODUCT_BRAND.slug}-dev`,
+    iosBundleIdentifier: `${PRODUCT_BRAND.mobileBundleId}.dev`,
+    androidPackage: `${PRODUCT_BRAND.mobileBundleId}.dev`,
+    relyingParty: undefined,
     assets: DEVELOPMENT_ASSETS,
   },
   preview: {
-    appName: "T3 Code Preview",
-    scheme: "t3code-preview",
-    iosBundleIdentifier: "com.t3tools.t3code.preview",
-    androidPackage: "com.t3tools.t3code.preview",
-    relyingParty: "clerk.t3.codes",
+    appName: `${PRODUCT_BRAND.name} Preview`,
+    scheme: `${PRODUCT_BRAND.slug}-preview`,
+    iosBundleIdentifier: `${PRODUCT_BRAND.mobileBundleId}.preview`,
+    androidPackage: `${PRODUCT_BRAND.mobileBundleId}.preview`,
+    relyingParty: undefined,
     assets: PREVIEW_ASSETS,
   },
   production: {
-    appName: "T3 Code",
-    scheme: "t3code",
-    iosBundleIdentifier: "com.t3tools.t3code",
-    androidPackage: "com.t3tools.t3code",
-    relyingParty: "clerk.t3.codes",
+    appName: PRODUCT_BRAND.name,
+    scheme: PRODUCT_BRAND.slug,
+    iosBundleIdentifier: PRODUCT_BRAND.mobileBundleId,
+    androidPackage: PRODUCT_BRAND.mobileBundleId,
+    relyingParty: undefined,
     assets: RELEASE_ASSETS,
   },
 } as const;
@@ -134,7 +135,7 @@ const widgetsPlugin: NonNullable<ExpoConfig["plugins"]>[number] = [
       {
         name: "SubscriptionUsage",
         displayName: "Subscription usage",
-        description: "Subscription quotas from your connected T3 Code environments.",
+        description: `Subscription quotas from your connected ${PRODUCT_BRAND.name} environments.`,
         ios: {
           configuration: {
             title: "Subscription usage",
@@ -185,7 +186,7 @@ const widgetsPlugin: NonNullable<ExpoConfig["plugins"]>[number] = [
       {
         name: "AgentActivity",
         displayName: "Agent Activity",
-        description: "Shows the current state of active T3 Code agents.",
+        description: `Shows the current state of active ${PRODUCT_BRAND.name} agents.`,
         // Live Activity companion; there is no Android presentation for it.
         android: null,
         ios: { supportedFamilies: ["systemSmall", "systemMedium", "accessoryRectangular"] },
@@ -226,7 +227,7 @@ const sharingPlugin: NonNullable<ExpoConfig["plugins"]>[number] = [
 
 const config: ExpoConfig = {
   name: variant.appName,
-  slug: "t3-code",
+  slug: PRODUCT_BRAND.slug,
   platforms: ["ios", "android"],
   scheme: variant.scheme,
   version: "1.3.1",
@@ -239,12 +240,16 @@ const config: ExpoConfig = {
   orientation: "portrait",
   icon: variant.assets.appIcon,
   userInterfaceStyle: "automatic",
-  updates: {
-    enabled: repoEnv.T3CODE_MOBILE_UPDATES_ENABLED !== "0",
-    url: "https://u.expo.dev/d763fcb8-d37c-41ea-a773-b54a0ab4a454",
-    checkAutomatically: "ON_LOAD",
-    fallbackToCacheTimeout: 0,
-  },
+  ...(repoEnv.T3CODE_MOBILE_UPDATES_ENABLED === "1" && repoEnv.T3CODE_MOBILE_UPDATES_URL
+    ? {
+        updates: {
+          enabled: true,
+          url: repoEnv.T3CODE_MOBILE_UPDATES_URL,
+          checkAutomatically: "ON_LOAD" as const,
+          fallbackToCacheTimeout: 0,
+        },
+      }
+    : { updates: { enabled: false } }),
   ios: {
     icon: variant.assets.iosIcon,
     supportsTablet: true,
@@ -252,14 +257,11 @@ const config: ExpoConfig = {
     // showcase capture build requires full screen (see infoPlist below).
     requireFullScreen: process.env.T3_SHOWCASE_CAPTURE_BUILD === "1",
     bundleIdentifier: iosBundleIdentifier,
-    // Pin code signing to the T3 Tools team so non-interactive `expo run:ios`
-    // does not fall back to a personal team (which cannot sign app groups,
-    // Sign in with Apple, or push notification entitlements).
-    appleTeamId: "ARK85ZXQ4Z",
-    associatedDomains: [
-      `applinks:${variant.relyingParty}`,
-      `webcredentials:${variant.relyingParty}`,
-    ],
+    // Do not pin the fork to an upstream Apple team. Release signing is
+    // configured only when the fork's own credentials are supplied.
+    associatedDomains: variant.relyingParty
+      ? [`applinks:${variant.relyingParty}`, `webcredentials:${variant.relyingParty}`]
+      : [],
     entitlements: {
       "keychain-access-groups": [`$(AppIdentifierPrefix)${variant.iosBundleIdentifier}`],
     },
@@ -268,8 +270,8 @@ const config: ExpoConfig = {
         NSAllowsArbitraryLoads: true,
       },
       NSLocalNetworkUsageDescription:
-        "Allow T3 Code to connect to T3 Code servers on your local network or tailnet.",
-      NSPhotoLibraryAddUsageDescription: "Allow T3 Code to save images to your photo library.",
+        `Allow ${PRODUCT_BRAND.name} to connect to servers on your local network or tailnet.`,
+      NSPhotoLibraryAddUsageDescription: `Allow ${PRODUCT_BRAND.name} to save images to your photo library.`,
       ITSAppUsesNonExemptEncryption: false,
       // The App Store screenshot harness rotates the iPad interface from
       // inside the app (CI denies osascript the Accessibility access that
@@ -372,7 +374,7 @@ const config: ExpoConfig = {
     [
       "expo-audio",
       {
-        microphonePermission: "Allow T3 Code to use your microphone for voice input.",
+        microphonePermission: `Allow ${PRODUCT_BRAND.name} to use your microphone for voice input.`,
         recordAudioAndroid: false,
         enableBackgroundPlayback: false,
         enableBackgroundRecording: false,
@@ -381,7 +383,7 @@ const config: ExpoConfig = {
     [
       "expo-camera",
       {
-        cameraPermission: "Allow T3 Code to access your camera so you can scan pairing QR codes.",
+        cameraPermission: `Allow ${PRODUCT_BRAND.name} to access your camera so you can scan pairing QR codes.`,
         microphonePermission: false,
         barcodeScannerEnabled: true,
         recordAudioAndroid: false,

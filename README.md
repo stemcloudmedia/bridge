@@ -1,6 +1,6 @@
-# T3 Code
+# Bridge
 
-T3 Code is an "agent harness control surface". It enables control of the agents on your machine with a best-in-class mobile app ([iOS](https://apps.apple.com/us/app/t3-code-remote-claude-more/id6787819824), [Android](https://play.google.com/store/apps/details?id=com.t3tools.t3code)), [web app](https://app.t3.codes) and [Electron-based desktop app](https://t3.codes).
+Bridge is an "agent harness control surface" derived from T3 Code. It enables control of the agents on your machine with web, mobile, and Electron-based desktop clients.
 
 Works with your subscriptions on Claude Code, Codex, Cursor, Grok Build, OpenCode, and Google Antigravity. If they're set up on your computer, T3 Code can control them.
 
@@ -126,7 +126,7 @@ Checkout their getting started guide for more information: https://viteplus.dev/
 vp i
 ```
 
-Read [CONTRIBUTING.md](./CONTRIBUTING.md) before reporting a bug or opening a PR.
+Read [CONTRIBUTING.md](./CONTRIBUTING.md) before reporting a bug or opening a PR. Fork-specific build and synchronization notes live in [docs/FORK.md](./docs/FORK.md).
 
 Have a feature request? Start an [Ideas discussion](https://github.com/pingdotgg/t3code/discussions/categories/ideas).
 
