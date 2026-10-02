@@ -52,6 +52,7 @@ jobs:
     name: Resolve release commit
     runs-on: blacksmith-8vcpu-ubuntu-2404
     timeout-minutes: 5
+    if: vars.BRIDGE_ENABLE_UPSTREAM_RELEASES == 'true'
     outputs:
       ref: ${{ steps.resolve.outputs.ref }}
       nightly_version: ${{ steps.resolve.outputs.nightly_version }}

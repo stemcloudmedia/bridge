@@ -1,9 +1,6 @@
 name: Deploy T3 Connect relay
 
 on:
-  push:
-    branches:
-      - main
   # Alchemy does not redeploy the Worker when only a Config value read in its
   # Init changes (alchemy-run/alchemy#1831), so a changed repository variable
   # needs a forced deploy to reach production.
@@ -27,7 +24,7 @@ jobs:
   deploy_relay:
     name: Deploy production relay
     # A manual run from another branch would deploy that branch to production.
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && vars.BRIDGE_ENABLE_UPSTREAM_RELEASES == 'true'
     runs-on: blacksmith-8vcpu-ubuntu-2404
     timeout-minutes: 15
     environment:

@@ -1,0 +1,70 @@
+name: Bridge Windows artifacts
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Git ref to build
+        required: false
+        default: rebrand/bridge-initial
+        type: string
+      architectures:
+        description: Build x64, ARM64, or both
+        required: true
+        default: x64
+        type: choice
+        options:
+          - x64
+          - arm64
+          - both
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  build:
+    name: Windows ${{ matrix.arch }}
+    if: inputs.architectures == 'both' || inputs.architectures == matrix.arch
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            runner: windows-2025
+            command: dist:desktop:win:x64
+          - arch: arm64
+            runner: windows-11-arm
+            command: dist:desktop:win:arm64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+          fetch-depth: 1
+
+      - name: Setup Vite+
+        uses: voidzero-dev/setup-vp@v1
+        with:
+          node-version-file: package.json
+          cache: true
+          run-install: true
+
+      - name: Build unsigned installer
+        shell: pwsh
+        env:
+          T3CODE_DESKTOP_SIGNED: "false"
+          T3CODE_DESKTOP_UPDATE_REPOSITORY: ""
+        run: vp run ${{ matrix.command }}
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: bridge-windows-${{ matrix.arch }}
+          if-no-files-found: error
+          path: |
+            release/*.exe
+            release/*.blockmap
+            release/*.yml

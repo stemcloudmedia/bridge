@@ -31,6 +31,7 @@ jobs:
   resolve:
     name: Verify preview eligibility
     if: >-
+      vars.BRIDGE_ENABLE_UPSTREAM_RELEASES == 'true' &&
       github.event_name == 'workflow_run' &&
       github.event.workflow_run.event == 'pull_request' &&
       github.event.workflow_run.conclusion == 'success'
