@@ -25,7 +25,6 @@ permissions:
 jobs:
   build:
     name: Windows ${{ matrix.arch }}
-    if: inputs.architectures == 'both' || inputs.architectures == matrix.arch
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 60
     strategy:
@@ -40,12 +39,14 @@ jobs:
             command: dist:desktop:win:arm64
     steps:
       - name: Checkout
+        if: inputs.architectures == 'both' || inputs.architectures == matrix.arch
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref || github.ref }}
           fetch-depth: 1
 
       - name: Setup Vite+
+        if: inputs.architectures == 'both' || inputs.architectures == matrix.arch
         uses: voidzero-dev/setup-vp@v1
         with:
           node-version-file: package.json
@@ -53,6 +54,7 @@ jobs:
           run-install: true
 
       - name: Build unsigned installer
+        if: inputs.architectures == 'both' || inputs.architectures == matrix.arch
         shell: pwsh
         env:
           T3CODE_DESKTOP_SIGNED: "false"
@@ -60,6 +62,7 @@ jobs:
         run: vp run ${{ matrix.command }}
 
       - name: Upload installer
+        if: inputs.architectures == 'both' || inputs.architectures == matrix.arch
         uses: actions/upload-artifact@v4
         with:
           name: bridge-windows-${{ matrix.arch }}
